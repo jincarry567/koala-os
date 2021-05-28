@@ -1,0 +1,8 @@
+romimage: file=/usr/share/bochs/BIOS-bochs-latest
+megs: 32
+vgaromimage: file=/usr/share/vgabios/vgabios.bin
+floppya: 1_44=/home/jincarry/Documents/koala-os/env/boot.img, status=inserted
+boot: floppy
+private_colormap: enabled=0
+fullscreen: enabled=0
+screenmode: name="sample"
