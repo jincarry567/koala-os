@@ -2,8 +2,8 @@
 
 koala-os is operator system just for learning.
 
-- [x] boot : `doing`
-- [ ] loader
+- [x] boot : `done`
+- [ ] loader `doing`
 - [ ] kernel
   - [ ] memory manager
   - [ ] more ...

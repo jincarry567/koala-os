@@ -46,7 +46,7 @@ SectorNo dw 0
 Odd db 0
 StartBootMessage : db "Start Boot"
 NoLoaderMessage : db "ERROR:NO LOADER FOUND"
-LoaderFileName : db "LOADER BIN",0
+LoaderFileName : db "LOADER  BIN",0
 
 Lablel_Start:
     mov ax,cs
@@ -66,21 +66,8 @@ Lablel_Start:
     mov bx,0000h
     mov dx,0000h
     int 10h
-;=======display on screen
-    mov ax,1301h
-    mov bx,000fh
-    mov dx,0000h
-    mov cx,10
-    push ax
-    mov ax,ds
-    mov es,ax
-    pop ax
-    mov bp,StartBootMessage
-    int 10h
-;=======reset floppy
-    xor ah,ah
-    xor dl,dl
-    int 13h
+    mov word [SectorNo],SectorNumOfRootDirStart
+    jmp Label_Search_In_Root_Dir_Begin
 
 ;======= read one sector from floppy
 
@@ -109,9 +96,7 @@ Label_Go_On_Reading:
     pop bp
     ret
 
-；====== search loader.bin
-    mov word [SectorNo],SectorNumOfRootDirStart
-
+;====== search loader.bin
 Label_Search_In_Root_Dir_Begin:
     cmp word [RootDirSizeForLoop],0
     jz Label_No_LoaderBin
@@ -243,8 +228,7 @@ Label_Go_On_Loading_File:
     jmp Label_Go_On_Loading_File
 
 Label_File_Loaded:
-    jmp $
+    jmp BaseOfLoader:OffsetOfLoader
 
     times 510 - ($ - $$) db 0
     dw 0xaa55
-
