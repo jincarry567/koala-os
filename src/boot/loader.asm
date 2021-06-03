@@ -9,38 +9,31 @@ mov ax,0x00
 mov ss,ax
 mov sp,0x7c00
 
-mov ax,1301h
-mov bx,000fh
-mov dx,0200h
-mov cx,12
-push ax
-mov ax,ds
-mov es,ax
-pop ax
-mov bp,StartLoaderMessage
-int 10h
-
 push ax
 in al,92h
 or al,00000010b
 out 92h,al
 pop ax
 
-[BITS 32]
-lgdt [0x7e00]
+lgdt [LOAD_GDT]
 mov eax,cr0
 or eax,1
 mov cr0,eax
-mov ax,0xffffffff
+mov ax,10h
 mov fs,ax
 mov eax,cr0
-and al,11111110b
-mov cr0,eax
-sti
-
 
 jmp $
 
 
 
 StartLoaderMessage : db "Start Loader"
+LABEL_GDT : dd 0,0   
+LABEL_DESC_CODE32:	dd	0x0000FFFF,0x00CF9A00
+LABEL_DESC_DATA32:	dd	0x0000FFFF,0x00CF9200
+
+LOAD_GDT :  dw 17h 
+            dd LABEL_GDT
+
+
+;=== LoaderGDT : dd 0h dd 0h  dd 7c00ffffh dd 00000000110011111001101000000000b
