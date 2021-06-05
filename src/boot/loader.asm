@@ -4,19 +4,15 @@ org 10000h
 
 jmp Label_Start
 
+%include	"fat12.inc"
+
 BaseOfStack equ 0x7c00
 BaseOfLoader equ 0x1000
 OffsetOfLoader equ 0x00
 
-RootDirSectors equ 14
-SectorNumOfRootDirStart equ 19
-SectorNumOfFAT1Start equ 1
-SectorBalance equ 17
-
-
 RootDirSizeForLoop dw RootDirSectors
-SectorNo dw 0
-Odd db 0
+SectorNo dw SectorNumOfRootDirStart
+RootIdx db 0
 NoKernerMessage : db "ERROR:NO Kerner FOUND"
 LoaderFileName : db "KERNER  BIN",0
 PrintMsgAddr : dw 0
@@ -39,30 +35,49 @@ Label_Start:
     mov sp,0x7c00
 
     ;call Enable_Protected_Mode
-    mov ax,LoaderFileName
-    mov [PrintMsgAddr],ax
-    call print_msg
+    jmp find_kernel_file
     jmp $
 
 find_kernel_file:
     cmp word [RootDirSizeForLoop],0
     jz not_found_kernel
     dec word [RootDirSizeForLoop]
-
-
-not_found_kernel:
-    mov ax,1301h
-    mov bx,008ch
-    mov dx,0100h
-    mov cx,21
-    push ax
-    mov ax,ds
-    mov es,ax
-    pop ax
-    mov bp,NoKernerMessage
-    int 10h
+    mov ax,[SectorNo]
+    ; 每次读2个扇区
+    mov cl,2
+    mov bx,0x8000
+    add ax,SectorNumOfFAT1Start
+    call Func_ReadOneSector
+    jmp find_root_item
     jmp $
 
+find_root_item:
+    cmp word [RootIdx],0x8000
+    jz find_kernel_file
+    mov ax,[RootIdx]
+    sub ax,20
+    push ax
+    mov [RootIdx],ax
+    mov cx,4
+    mov dx,4
+    mov si,ax
+    cld
+cmp_file_name:
+    lodsw
+    cmp ax,
+    loop cmp_file_name
+    pop ax
+    call print_msg
+    jmp find_root_item
+
+not_found_kernel:
+    mov ax,NoKernerMessage
+    mov [PrintMsgAddr],ax
+    call print_msg
+    jmp $
+
+;=== mov ax,LoaderFileName
+;=== mov [PrintMsgAddr],ax
 print_msg:
    
     push ax
@@ -103,6 +118,34 @@ print_msg:
     pop bx
     pop ax
 
+    ret
+
+; AX=待读取的磁盘起始扇区（0开始）
+; CL=读入的扇区数量
+; ES:BX 目标缓冲区地址
+Func_ReadOneSector:
+    push bp
+    mov bp,sp
+    sub esp,2
+    mov byte [bp -2],cl
+    push bx
+    mov bl,[BPB_SecPerTrk]
+    div bl
+    inc ah
+    mov cl,ah
+    mov dh,al
+    shr al,1
+    mov ch,al
+    and dh,1
+    pop bx
+    mov dl,[BS_DrvNum]
+Label_Go_On_Reading:
+    mov ah,2
+    mov al,byte [bp -2]
+    int 13h
+    jc Label_Go_On_Reading
+    add esp,2
+    pop bp
     ret
 
 Enable_Protected_Mode:
