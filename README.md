@@ -4,9 +4,10 @@ koala-os is operator system just for learning.
 
 - [x] boot : `done`
 - [ ] loader `doing`
-  - [ ] enable A20
+  - [x] enable A20
+  - [x] switch mode
   - [ ] load kener.bin
-  - [ ] load  
+  - [ ] hardware detection
 - [ ] kernel
   - [ ] memory manager
   - [ ] more ...
