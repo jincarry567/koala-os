@@ -12,9 +12,9 @@ OffsetOfLoader equ 0x00
 
 RootDirSizeForLoop dw RootDirSectors
 SectorNo dw SectorNumOfRootDirStart
-RootIdx db 0
+RootIdx dw 0
 NoKernerMessage : db "ERROR:NO Kerner FOUND"
-LoaderFileName : db "KERNER  BIN",0
+LoaderFileName : db "LOADER  BIN",0
 PrintMsgAddr : dw 0
 
 StartLoaderMessage : db "Start Loader"
@@ -48,27 +48,35 @@ find_kernel_file:
     mov bx,0x8000
     add ax,SectorNumOfFAT1Start
     call Func_ReadOneSector
+    mov word [RootIdx],0x8200
     jmp find_root_item
-    jmp $
 
 find_root_item:
     cmp word [RootIdx],0x8000
     jz find_kernel_file
     mov ax,[RootIdx]
     sub ax,20
-    push ax
     mov [RootIdx],ax
-    mov cx,4
-    mov dx,4
+    push si
+    push di
+    
+    mov cx,8
     mov si,ax
+    mov di,LoaderFileName
     cld
-cmp_file_name:
-    lodsw
-    cmp ax,
-    loop cmp_file_name
-    pop ax
+    repe cmpsb
+    pop di
+    pop si
+    mov [PrintMsgAddr],ax
     call print_msg
+    jz finded_root_item
     jmp find_root_item
+
+finded_root_item:
+    mov ax,LoaderFileName
+    mov [PrintMsgAddr],ax
+    call print_msg
+    jmp $
 
 not_found_kernel:
     mov ax,NoKernerMessage
